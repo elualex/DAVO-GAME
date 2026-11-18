@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 
@@ -71,9 +72,6 @@ const ARGENTINE_TEAMS = [
 ]
 
 // PARTIDOS HISTÓRICOS DE EJEMPLO.
-// Podés agregar más partidos a esta lista.
-// Los goleadores se guardan una sola vez por jugador,
-// aunque hayan marcado más de un gol.
 
 const MATCHES: Match[] = [
   {
@@ -81,14 +79,69 @@ const MATCHES: Match[] = [
     category: 'Torneos Nacionales',
     competition: 'La Liga',
     date: '29/11/2010',
-    homeTeam: 'Barcelona',
+    homeTeam: 'River Plate',
     awayTeam: 'Real Madrid',
     homeGoals: 5,
-    stadium: "Bernabeu",
+    stadium: 'Bernabeu',
+    awayGoals: 0,
+    scorers: ['Xavi', 'Pedro', 'Villa', 'Jeffren']
+  },
+    {
+    id: 'match-1',
+    category: 'Torneos Nacionales',
+    competition: 'La Liga',
+    date: '29/11/2014',
+    homeTeam: 'River Plate',
+    awayTeam: 'Real Madrid',
+    homeGoals: 5,
+    stadium: 'Bernabeu',
+    awayGoals: 0,
+    scorers: ['Xavi', 'Pedro', 'Villa', 'Jeffren']
+  },
+    {
+    id: 'match-1',
+    category: 'Torneos Nacionales',
+    competition: 'La Liga',
+    date: '29/11/2013',
+    homeTeam: 'River Plate',
+    awayTeam: 'Real Madrid',
+    homeGoals: 5,
+    stadium: 'Bernabeu',
+    awayGoals: 0,
+    scorers: ['Xavi', 'Pedro', 'Villa', 'Jeffren']
+  },
+    {
+    id: 'match-1',
+    category: 'Torneos Nacionales',
+    competition: 'La Liga',
+    date: '29/11/2012',
+    homeTeam: 'River Plate',
+    awayTeam: 'Real Madrid',
+    homeGoals: 5,
+    stadium: 'Bernabeu',
+    awayGoals: 0,
+    scorers: ['Xavi', 'Pedro', 'Villa', 'Jeffren']
+  },
+    {
+    id: 'match-1',
+    category: 'Torneos Nacionales',
+    competition: 'La Liga',
+    date: '29/11/2011',
+    homeTeam: 'River Plate',
+    awayTeam: 'Real Madrid',
+    homeGoals: 5,
+    stadium: 'Bernabeu',
     awayGoals: 0,
     scorers: ['Xavi', 'Pedro', 'Villa', 'Jeffren']
   },
 ]
+
+// OBTENER EL AÑO DE UN PARTIDO.
+// El formato de las fechas es DD/MM/YYYY.
+
+function getMatchYear(date: string): number {
+  return Number(date.split('/')[2])
+}
 
 // NORMALIZAMOS LOS APELLIDOS PARA QUE NO IMPORTEN
 // LAS MAYÚSCULAS, MINÚSCULAS NI LAS TILDES.
@@ -122,6 +175,11 @@ function App() {
   const [timeLimit, setTimeLimit] = useState(20)
   const [timeLeft, setTimeLeft] = useState(20)
 
+  // RANGO DE AÑOS DE LOS PARTIDOS.
+
+  const [startYear, setStartYear] = useState(1970)
+  const [endYear, setEndYear] = useState(2025)
+
   const [roomCode, setRoomCode] = useState('')
   const [joinCode, setJoinCode] = useState('')
   const [notice, setNotice] = useState('')
@@ -143,16 +201,22 @@ function App() {
     0
   )
 
-  // CONTAMOS SOLAMENTE LOS PARTIDOS QUE COINCIDEN
-  // CON LAS CATEGORÍAS Y LOS EQUIPOS SELECCIONADOS.
+  // CONTAMOS LOS PARTIDOS QUE COINCIDEN CON:
+  // CATEGORÍAS, EQUIPOS Y RANGO DE AÑOS.
 
-  const availableMatchCount = MATCHES.filter(match =>
-    categories.includes(match.category) &&
-    (
-      selectedTeams.includes(match.homeTeam) ||
-      selectedTeams.includes(match.awayTeam)
+  const availableMatchCount = MATCHES.filter(match => {
+    const year = getMatchYear(match.date)
+
+    return (
+      categories.includes(match.category) &&
+      (
+        selectedTeams.includes(match.homeTeam) ||
+        selectedTeams.includes(match.awayTeam)
+      ) &&
+      year >= startYear &&
+      year <= endYear
     )
-  ).length
+  }).length
 
   const answered = currentAnswer !== undefined
 
@@ -241,17 +305,23 @@ function App() {
       return
     }
 
-    let availableMatches = MATCHES.filter(match =>
-      categories.includes(match.category) &&
-      (
-        selectedTeams.includes(match.homeTeam) ||
-        selectedTeams.includes(match.awayTeam)
+    let availableMatches = MATCHES.filter(match => {
+      const year = getMatchYear(match.date)
+
+      return (
+        categories.includes(match.category) &&
+        (
+          selectedTeams.includes(match.homeTeam) ||
+          selectedTeams.includes(match.awayTeam)
+        ) &&
+        year >= startYear &&
+        year <= endYear
       )
-    )
+    })
 
     if (availableMatches.length === 0) {
       setNotice(
-        'No hay partidos disponibles para los equipos y categorías seleccionados.'
+        'No hay partidos disponibles para los equipos, categorías y años seleccionados.'
       )
       setScreen('lobby')
       return
@@ -681,6 +751,88 @@ function App() {
 
                 <small className="selector-hint">
                   Se incluirán los partidos en los que participe al menos uno de los equipos seleccionados.
+                </small>
+              </div>
+
+              {/* RANGO DE AÑOS */}
+
+              <div className="form-group">
+                <label>Período histórico de los partidos</label>
+
+                {/* AÑO INICIAL */}
+
+                <div style={{ marginBottom: '18px' }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '8px'
+                  }}>
+                    <span>Desde</span>
+                    <strong style={{
+                      fontSize: '1.2rem',
+                      color: '#32b464'
+                    }}>
+                      {startYear}
+                    </strong>
+                  </div>
+
+                  <input
+                    type="range"
+                    min={1970}
+                    max={endYear}
+                    step={1}
+                    value={startYear}
+                    onChange={event => {
+                      setStartYear(Number(event.target.value))
+                      setNotice('')
+                    }}
+                    style={{
+                      width: '100%',
+                      accentColor: '#32b464',
+                      cursor: 'pointer'
+                    }}
+                  />
+                </div>
+
+                {/* AÑO FINAL */}
+
+                <div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '8px'
+                  }}>
+                    <span>Hasta</span>
+                    <strong style={{
+                      fontSize: '1.2rem',
+                      color: '#32b464'
+                    }}>
+                      {endYear}
+                    </strong>
+                  </div>
+
+                  <input
+                    type="range"
+                    min={startYear}
+                    max={2025}
+                    step={1}
+                    value={endYear}
+                    onChange={event => {
+                      setEndYear(Number(event.target.value))
+                      setNotice('')
+                    }}
+                    style={{
+                      width: '100%',
+                      accentColor: '#32b464',
+                      cursor: 'pointer'
+                    }}
+                  />
+                </div>
+
+                <small className="selector-hint">
+                  Se incluirán los partidos disputados entre {startYear} y {endYear}, ambos años inclusive.
                 </small>
               </div>
 
